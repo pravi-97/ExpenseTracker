@@ -7,6 +7,8 @@ app.use(cors());
 app.use(express.json());
 const port = 3000
 
+const URL = "libsql://test-db-pravi-97.turso.io";
+const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJleHAiOjE3MTExNTIwMDYsImlhdCI6MTcxMDU3OTUwNCwiaWQiOiJjOWQ3ZTRlNS1jMzM2LTExZWUtYjA3MS01MjA1M2M0YjIzYTYifQ.4kWZrwu1ChjtJkzNaKens6FJjF1MamUxspzHs4u27SMb1gxcQrTgn7YupNysw4imHv3GDDDq5hfQYyCNe-FYAA";
 const data = [
     { "date": "2024-01-04", "type": "Bills", "remarks": "Internet bill", "price": 125 },
     { "date": "2024-01-07", "type": "Entertainment", "remarks": "Streaming service subscription", "price": 220 },
@@ -41,22 +43,22 @@ const data = [
     { "date": "2024-02-29", "type": "Bills", "remarks": "Credit card", "price": 450 }
 ];
 async function fetchData() {
-    // const client = createClient({  
-    //     url: "libsql://test-db-pravi-97.turso.io",
-    //     authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJleHAiOjE3MTExNTIwMDYsImlhdCI6MTcxMDU3OTUwNCwiaWQiOiJjOWQ3ZTRlNS1jMzM2LTExZWUtYjA3MS01MjA1M2M0YjIzYTYifQ.4kWZrwu1ChjtJkzNaKens6FJjF1MamUxspzHs4u27SMb1gxcQrTgn7YupNysw4imHv3GDDDq5hfQYyCNe-FYAA",
-    // });
+    const client = createClient({  
+        url: URL,
+        authToken: TOKEN,
+    });
     try {
-        // const result = await client.execute("SELECT * FROM expense");
-        return data;
+        const result = await client.execute("SELECT * FROM expense");
+        return result;
     } finally {
-        // await client.close();
+        await client.close();
     }
 }
 
 app.get('/', async (req, res) => {
     try {
         const response = await fetchData();
-        res.send(response);
+        res.sendStatus(200).send(response);
         // res.sendStatus(200).send(data);
     } catch (error) {
         console.error('Error :', error);
@@ -66,17 +68,36 @@ app.get('/', async (req, res) => {
 
 app.post('/', async (req, res) =>{
     try{
+        const client = createClient({
+            url: URL,
+            authToken: TOKEN,
+        });
         console.log(req.body);
+        const result = await client.execute({
+            sql: "INSERT INTO expense (date, remarks, type, price) values ( ? , ? , ? , ? )",
+            args: [req.body.date, req.body.remarks, req.body.type, req.body.price],
+        });
         res.status(200).send("OK");
     }
     catch(error){
         console.log(error);
         res.status(500).send('Error');
     }
+    finally{
+        await client.close();
+    }
 })
 
 app.put('/', async (req, res) => {
     try {
+        const client = createClient({
+            url: URL,
+            authToken: TOKEN,
+        });
+        const result = await client.execute({
+            sql: `UPDATE expenses SET ${field} = ? WHERE ID = ?`,
+            args: [req.query.value, req.query.id],
+        });
         console.log(req.query.id);
         console.log(req.query.field);
         console.log(req.query.value);
@@ -86,16 +107,30 @@ app.put('/', async (req, res) => {
         console.log(error);
         res.status(500).send('Error');
     }
+    finally{
+        await client.close();
+    }
 })
 
 app.delete('/:id', async (req, res) => {
     try {
+        const client = createClient({
+            url: URL,
+            authToken: TOKEN,
+        });
+        const result = await client.execute({
+            sql: `DELETE FROM expense WHERE ID = ?`,
+            args: [req.params.id],
+        });
         console.log(req.params.id);
         res.status(200).send("OK");
     }
     catch (error) {
         console.log(error);
         res.status(500).send('Error');
+    }
+    finally{
+        await client.close();
     }
 })
 app.listen(port, () => {
