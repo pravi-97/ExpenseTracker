@@ -58,7 +58,7 @@ async function fetchData() {
 app.get('/', async (req, res) => {
     try {
         const response = await fetchData();
-        res.sendStatus(200).send(response);
+        res.send(response);
         // res.sendStatus(200).send(data);
     } catch (error) {
         console.error('Error :', error);
@@ -77,14 +77,13 @@ app.post('/', async (req, res) =>{
             sql: "INSERT INTO expense (date, remarks, type, price) values ( ? , ? , ? , ? )",
             args: [req.body.date, req.body.remarks, req.body.type, req.body.price],
         });
-        res.status(200).send("OK");
+        await client.close();
+        res.send("OK");
     }
     catch(error){
         console.log(error);
-        res.status(500).send('Error');
-    }
-    finally{
         await client.close();
+        res.status(500).send('Error');
     }
 })
 
@@ -101,14 +100,13 @@ app.put('/', async (req, res) => {
         console.log(req.query.id);
         console.log(req.query.field);
         console.log(req.query.value);
-        res.status(200).send("OK");
+        await client.close();
+        res.send("OK");
     }
     catch (error) {
         console.log(error);
-        res.status(500).send('Error');
-    }
-    finally{
         await client.close();
+        res.status(500).send('Error');
     }
 })
 
@@ -123,17 +121,15 @@ app.delete('/:id', async (req, res) => {
             args: [req.params.id],
         });
         console.log(req.params.id);
-        res.status(200).send("OK");
+        await client.close();
+        res.send("OK");
     }
     catch (error) {
         console.log(error);
-        res.status(500).send('Error');
-    }
-    finally{
         await client.close();
+        res.status(500).send('Error');
     }
 })
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
 })
-
