@@ -42,24 +42,25 @@ const data = [
     { "date": "2024-02-28", "type": "Groceries", "remarks": "Monthly shopping", "price": 890 },
     { "date": "2024-02-29", "type": "Bills", "remarks": "Credit card", "price": 450 }
 ];
-async function fetchData() {
-    const client = createClient({  
-        url: URL,
-        authToken: TOKEN,
-    });
-    try {
-        const result = await client.execute("SELECT * FROM expense");
-        return result;
-    } finally {
-        await client.close();
-    }
-}
+// async function fetchData() {
+//     const client = createClient({  
+//         url: URL,
+//         authToken: TOKEN,
+//     });
+//     try {
+//         const result = await client.execute("SELECT * FROM expense");
+//         return result;
+//     } finally {
+//         await client.close();
+//     }
+// }
 
 app.get('/', async (req, res) => {
     try {
-        const response = await fetchData();
-        res.send(response);
-        // res.sendStatus(200).send(data);
+        // const response = await fetchData();
+        // res.send(response);
+        console.log(data);
+        res.status(200).send(data);
     } catch (error) {
         console.error('Error :', error);
         res.status(500).send('Error fetching data');  
@@ -68,65 +69,65 @@ app.get('/', async (req, res) => {
 
 app.post('/', async (req, res) =>{
     try{
-        const client = createClient({
-            url: URL,
-            authToken: TOKEN,
-        });
+        // const client = createClient({
+        //     url: URL,
+        //     authToken: TOKEN,
+        // });
         console.log(req.body);
-        const result = await client.execute({
-            sql: "INSERT INTO expense (date, remarks, type, price) values ( ? , ? , ? , ? )",
-            args: [req.body.date, req.body.remarks, req.body.type, req.body.price],
-        });
-        await client.close();
+        // const result = await client.execute({
+        //     sql: "INSERT INTO expense (date, remarks, type, price) values ( ? , ? , ? , ? )",
+        //     args: [req.body.date, req.body.remarks, req.body.type, req.body.price],
+        // });
+        // await client.close();
         res.send("OK");
     }
     catch(error){
         console.log(error);
-        await client.close();
+        // await client.close();
         res.status(500).send('Error');
     }
 })
 
 app.put('/', async (req, res) => {
     try {
-        const client = createClient({
-            url: URL,
-            authToken: TOKEN,
-        });
-        const result = await client.execute({
-            sql: `UPDATE expenses SET ${field} = ? WHERE ID = ?`,
-            args: [req.query.value, req.query.id],
-        });
+        // const client = createClient({
+        //     url: URL,
+        //     authToken: TOKEN,
+        // });
+        // const result = await client.execute({
+        //     sql: `UPDATE expenses SET ${field} = ? WHERE ID = ?`,
+        //     args: [req.query.value, req.query.id],
+        // });
         console.log(req.query.id);
         console.log(req.query.field);
         console.log(req.query.value);
-        await client.close();
+        // await client.close();
         res.send("OK");
     }
     catch (error) {
         console.log(error);
-        await client.close();
+        // await client.close();
         res.status(500).send('Error');
     }
 })
 
 app.delete('/:id', async (req, res) => {
     try {
-        const client = createClient({
-            url: URL,
-            authToken: TOKEN,
-        });
-        const result = await client.execute({
-            sql: `DELETE FROM expense WHERE ID = ?`,
-            args: [req.params.id],
-        });
+        // const client = createClient({
+        //     url: URL,
+        //     authToken: TOKEN,
+        // });
+        // const result = await client.execute({
+        //     sql: `DELETE FROM expense WHERE ID = ?`,
+        //     args: [req.params.id],
+        // });
         console.log(req.params.id);
-        await client.close();
+        // await client.close();
         res.send("OK");
     }
     catch (error) {
         console.log(error);
-        await client.close();
+        // await client.close();
         res.status(500).send('Error');
     }
 })
