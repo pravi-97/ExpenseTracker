@@ -31,7 +31,7 @@ const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJleHAiOjE3MTEx
 app.get('/all', async (req, res) => {
     try {
         // `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses;`
-        const response = await pool.query("SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses order by id");
+        const response = await pool.query("SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses order by id DESC");
         // const response = await pool.query("SELECT * from expenses");
         // console.log(response.rows);
         
@@ -41,23 +41,89 @@ app.get('/all', async (req, res) => {
         res.status(500).send('Error fetching data');  
     }
 })
+app.get('/tag/:tag', async (req, res) => {
+    try {
+        // `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses;`
+        if (req.params.tag.trim() != ""){
+            // let response = {};
+            const response = await pool.query(`SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' order by id DESC`);
+            // const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
+            // response.sum = response1.rows; 
+            // response.date = response2.rows;
+            res.status(200).send(response.rows);
+        }else{
+            // let response = {};
+            const response = await pool.query(`SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses order by id DESC`);
+            // const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
+            // response.sum = response1.rows;
+            // response.date = response2.rows;
+            res.status(200).send(response.rows);
+        }
+        // const response = await pool.query("SELECT * from expenses");
+        // console.log(response.rows);
 
-app.get('/tag', async (req, res) => {
+        
+    } catch (error) {
+        console.error('Error :', error);
+        res.status(500).send('Error fetching data');
+    }
+})
+
+app.get('/group', async (req, res) => {
     //     const client = createClient({
     //     url: URL,
     //     authToken: TOKEN,
     // });
     try {
-        const result = await pool.query("SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses group by type");
+        const response1 = await pool.query("SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses group by type");
         // console.log(result.rows);
-        const formattedData = result.rows.map(row => {
+        const formattedData = response1.rows.map(row => {
             row.total_price = parseFloat(row.total_price); 
             return row;
         });
-        res.status(200).send(result.rows);
+        let response = {};
+        const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
+        response.sum = response1.rows;
+        response.date = response2.rows;
+        res.status(200).send(response);
     }
     catch(e){
+        console.log(e.message);
         res.status(500).send({"Error: ": e});
+    } finally {
+        // await client.close();
+    }
+})
+
+app.get('/monthly', async (req, res) => {
+    console.log(req.query.month);
+    console.log(req.query.year);
+    //     const client = createClient({
+    //     url: URL,
+    //     authToken: TOKEN,
+    // });
+    try {
+        if (req.query.month.trim() == "" || req.query.month == undefined || req.query.year.trim() == "" || req.query.year == undefined){
+            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses group by type`);
+            // console.log(result.rows);
+            const formattedData = response.rows.map(row => {
+                row.total_price = parseFloat(row.total_price);
+                return row;
+            });
+            res.status(200).send(response.rows);
+        }else{
+            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year} group by type`);
+            // console.log(result.rows);
+            const formattedData = response.rows.map(row => {
+                row.total_price = parseFloat(row.total_price);
+                return row;
+            });
+            res.status(200).send(response.rows);
+        }
+    }
+    catch (e) {
+        console.log(e.message);
+        res.status(500).send({ "Error: ": e });
     } finally {
         // await client.close();
     }
@@ -75,11 +141,12 @@ app.post('/', async (req, res) =>{
         //     args: [req.body.date, req.body.remarks, req.body.type, req.body.price],
         // });
         // await client.close();
-        const result = await pool.query(`INSERT INTO expense (date, remarks, type, price) values ( '${req.body.date}', '${req.body.remarks}', '${req.body.type}', '${req.body.price}' )`);
+        // console.log("req.body: ", req.body.body);
+        const result = await pool.query(`INSERT INTO expenses (date, remarks, type, price) values ( '${req.body.body.date}', '${req.body.body.remarks}', '${req.body.body.type}', '${req.body.body.price}' )`);
         res.send("OK");
     }
     catch(error){
-        console.log(error);
+        console.log(error.message);
         // await client.close();
         res.status(500).send('Error');
     }
