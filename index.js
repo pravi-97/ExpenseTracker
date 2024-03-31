@@ -8,7 +8,7 @@ app.use(express.json());
 const port = 3000
 const { Pool } = require('postgres-pool');
 const pool = new Pool({
-    connectionString: "postgres://pravi894:XyA4hx85PRBA3qGpF1Fc@food-delivery-ap.cb28a28y2knz.ap-south-1.rds.amazonaws.com/postgres",
+    connectionString: "postgres://pravi894:XyA4hx85PRBA3qGpF1Fc@food-delivery-app.cb28a28y2knz.ap-south-1.rds.amazonaws.com/postgres",
     ssl: 'aws-rds'
 });
 
@@ -31,7 +31,7 @@ const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJleHAiOjE3MTEx
 app.get('/all', async (req, res) => {
     try {
         // `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses;`
-        const response = await pool.query("SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses order by id DESC");
+        const response = await pool.query("SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where deleted = false order by id DESC");
         // const response = await pool.query("SELECT * from expenses");
         // console.log(response.rows);
         
@@ -45,15 +45,22 @@ app.get('/tag/:tag', async (req, res) => {
     try {
         // `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses;`
         if (req.params.tag.trim() != ""){
-            // let response = {};
-            const response = await pool.query(`SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' order by id DESC`);
+            let query = "";
+            // console.log(req.query.monthyear);
+            if (req.query.monthyear == undefined){
+                query = `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' AND deleted = false order by id DESC`;
+            }else {
+                query = `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' and 
+                EXTRACT(MONTH FROM date) = ${req.query.monthyear.substring(0, 1)} AND EXTRACT(YEAR FROM date) = ${req.query.monthyear.substring(2, 6) } AND deleted = false order by id DESC`;
+            }
+            const response = await pool.query(query);
             // const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
             // response.sum = response1.rows; 
             // response.date = response2.rows;
             res.status(200).send(response.rows);
         }else{
             // let response = {};
-            const response = await pool.query(`SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses order by id DESC`);
+            const response = await pool.query(`SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses  WHERE deleted = false order by id DESC`);
             // const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
             // response.sum = response1.rows;
             // response.date = response2.rows;
@@ -75,14 +82,14 @@ app.get('/group', async (req, res) => {
     //     authToken: TOKEN,
     // });
     try {
-        const response1 = await pool.query("SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses group by type");
+        const response1 = await pool.query("SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses where deleted = false group by type");
         // console.log(result.rows);
         const formattedData = response1.rows.map(row => {
             row.total_price = parseFloat(row.total_price); 
             return row;
         });
         let response = {};
-        const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
+        const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses where deleted = false;`);
         response.sum = response1.rows;
         response.date = response2.rows;
         res.status(200).send(response);
@@ -96,15 +103,15 @@ app.get('/group', async (req, res) => {
 })
 
 app.get('/monthly', async (req, res) => {
-    console.log(req.query.month);
-    console.log(req.query.year);
+    // console.log(req.query.month);
+    // console.log(req.query.year);
     //     const client = createClient({
     //     url: URL,
     //     authToken: TOKEN,
     // });
     try {
         if (req.query.month.trim() == "" || req.query.month == undefined || req.query.year.trim() == "" || req.query.year == undefined){
-            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses group by type`);
+            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses where deleted = false group by type`);
             // console.log(result.rows);
             const formattedData = response.rows.map(row => {
                 row.total_price = parseFloat(row.total_price);
@@ -112,7 +119,7 @@ app.get('/monthly', async (req, res) => {
             });
             res.status(200).send(response.rows);
         }else{
-            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year} group by type`);
+            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year}  AND deleted = false group by type`);
             // console.log(result.rows);
             const formattedData = response.rows.map(row => {
                 row.total_price = parseFloat(row.total_price);
@@ -129,6 +136,15 @@ app.get('/monthly', async (req, res) => {
     }
 })
 
+app.get('/month', async (req, res) => {
+    try{
+        const response = await pool.query(`SELECT EXTRACT(YEAR FROM date) AS year, EXTRACT(MONTH FROM date) AS month, type, SUM(price) AS total_price FROM expenses GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date), type order by EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date);`);
+        res.status(200).send(response.rows);
+    }
+    catch(error){
+        console.log(error.message);
+    }
+})
 app.post('/', async (req, res) =>{
     try{
         // const client = createClient({
@@ -142,7 +158,7 @@ app.post('/', async (req, res) =>{
         // });
         // await client.close();
         // console.log("req.body: ", req.body.body);
-        const result = await pool.query(`INSERT INTO expenses (date, remarks, type, price) values ( '${req.body.body.date}', '${req.body.body.remarks}', '${req.body.body.type}', '${req.body.body.price}' )`);
+        const result = await pool.query(`INSERT INTO expenses (date, remarks, type, price, deleted) values ( '${req.body.body.date}', '${req.body.body.remarks}', '${req.body.body.type}', '${req.body.body.price}', false )`);
         res.send("OK");
     }
     catch(error){
@@ -162,9 +178,9 @@ app.put('/', async (req, res) => {
         //     sql: `UPDATE expenses SET ${field} = ? WHERE ID = ?`,
         //     args: [req.query.value, req.query.id],
         // });
-        console.log(req.query.id);
-        console.log(req.query.field);
-        console.log(req.query.value);
+        // console.log(req.query.id);
+        // console.log(req.query.field);
+        // console.log(req.query.value);
         // await client.close();
         const result = await pool.query(`UPDATE expenses SET ${req.query.field} = '${req.query.value}' WHERE ID = '${req.query.id}'`);
         res.send("OK");
@@ -186,9 +202,9 @@ app.delete('/:id', async (req, res) => {
         //     sql: `DELETE FROM expense WHERE ID = ?`,
         //     args: [req.params.id],
         // });
-        console.log(req.params.id);
+        // console.log(req.params.id);
         // await client.close();
-        const result = await pool.query(`DELETE FROM expenses WHERE ID = ${req.params.id}`);
+        const result = await pool.query(`update expenses set deleted = true WHERE ID = ${req.params.id}`);
         res.send("OK");
     }
     catch (error) {
