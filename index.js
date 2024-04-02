@@ -12,14 +12,14 @@ const pool = new Pool({
     ssl: 'aws-rds'
 });
 
-const URL = "libsql://test-db-pravi-97.turso.io";
-const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJleHAiOjE3MTExNTIwMDYsImlhdCI6MTcxMDU3OTUwNCwiaWQiOiJjOWQ3ZTRlNS1jMzM2LTExZWUtYjA3MS01MjA1M2M0YjIzYTYifQ.4kWZrwu1ChjtJkzNaKens6FJjF1MamUxspzHs4u27SMb1gxcQrTgn7YupNysw4imHv3GDDDq5hfQYyCNe-FYAA";
+const URL = "libsql://expense-tracker-pravi-97.turso.io";
+const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MTIwNDQ3NzUsImlkIjoiZTI3MGExMzItODEzYS00Y2M2LWE3YzEtNjhjY2YxYzk1MTk4In0.3P_jsYqmmnkL22aSXEK6wL1XmPMd6QW2HFEv9Q2JztpD9x6Cm6GHszI37PpCrQ19v4qNdyIQjgkC6iZl3Nt9DA";
 
 // async function fetchData() {
-//     const client = createClient({  
-//         url: URL,
-//         authToken: TOKEN,
-//     });
+    // const client = createClient({  
+    //     url: URL,
+    //     authToken: TOKEN,
+    // });
 //     try {
 //         const result = await client.execute("SELECT * FROM expense");
 //         return result;
@@ -30,9 +30,13 @@ const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJleHAiOjE3MTEx
 
 app.get('/all', async (req, res) => {
     try {
+        // const client = createClient({
+        //     url: URL,
+        //     authToken: TOKEN,
+        // });
         // `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses;`
         const response = await pool.query("SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where deleted = false order by id DESC");
-        // const response = await pool.query("SELECT * from expenses");
+        // const response = await client.execute("SELECT * FROM expenses WHERE deleted = 0 ORDER BY id DESC;");
         // console.log(response.rows);
         
         res.status(200).send(response.rows);
@@ -43,10 +47,8 @@ app.get('/all', async (req, res) => {
 })
 app.get('/tag/:tag', async (req, res) => {
     try {
-        // `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses;`
         if (req.params.tag.trim() != ""){
             let query = "";
-            // console.log(req.query.monthyear);
             if (req.query.monthyear == undefined){
                 query = `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' AND deleted = false order by id DESC`;
             }else {
@@ -54,23 +56,12 @@ app.get('/tag/:tag', async (req, res) => {
                 EXTRACT(MONTH FROM date) = ${req.query.monthyear.substring(0, 1)} AND EXTRACT(YEAR FROM date) = ${req.query.monthyear.substring(2, 6) } AND deleted = false order by id DESC`;
             }
             const response = await pool.query(query);
-            // const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
-            // response.sum = response1.rows; 
-            // response.date = response2.rows;
             res.status(200).send(response.rows);
         }else{
-            // let response = {};
             const response = await pool.query(`SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses  WHERE deleted = false order by id DESC`);
-            // const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses;`);
-            // response.sum = response1.rows;
-            // response.date = response2.rows;
             res.status(200).send(response.rows);
         }
-        // const response = await pool.query("SELECT * from expenses");
-        // console.log(response.rows);
-
-        
-    } catch (error) {
+     } catch (error) {
         console.error('Error :', error);
         res.status(500).send('Error fetching data');
     }
@@ -103,8 +94,6 @@ app.get('/group', async (req, res) => {
 })
 
 app.get('/monthly', async (req, res) => {
-    // console.log(req.query.month);
-    // console.log(req.query.year);
     //     const client = createClient({
     //     url: URL,
     //     authToken: TOKEN,
@@ -120,7 +109,6 @@ app.get('/monthly', async (req, res) => {
             res.status(200).send(response.rows);
         }else{
             const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year}  AND deleted = false group by type`);
-            // console.log(result.rows);
             const formattedData = response.rows.map(row => {
                 row.total_price = parseFloat(row.total_price);
                 return row;
@@ -194,18 +182,19 @@ app.put('/', async (req, res) => {
 
 app.delete('/:id', async (req, res) => {
     try {
-        // const client = createClient({
-        //     url: URL,
-        //     authToken: TOKEN,
-        // });
+        const client = createClient({
+            url: URL,
+            authToken: TOKEN,
+        });
         // const result = await client.execute({
         //     sql: `DELETE FROM expense WHERE ID = ?`,
         //     args: [req.params.id],
         // });
         // console.log(req.params.id);
         // await client.close();
-        const result = await pool.query(`update expenses set deleted = true WHERE ID = ${req.params.id}`);
-        res.send("OK");
+        // const response = await pool.query(`update expenses set deleted = true WHERE ID = ${req.params.id}`);
+        const response = await client.execute(`update expenses set deleted = true WHERE ID = ${req.params.id}`);
+        res.send("OK: ", response);
     }
     catch (error) {
         console.log(error);
