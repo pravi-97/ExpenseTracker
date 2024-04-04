@@ -16,10 +16,10 @@ const URL = "libsql://expense-tracker-pravi-97.turso.io";
 const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MTIwNDQ3NzUsImlkIjoiZTI3MGExMzItODEzYS00Y2M2LWE3YzEtNjhjY2YxYzk1MTk4In0.3P_jsYqmmnkL22aSXEK6wL1XmPMd6QW2HFEv9Q2JztpD9x6Cm6GHszI37PpCrQ19v4qNdyIQjgkC6iZl3Nt9DA";
 
 // async function fetchData() {
-    // const client = createClient({  
-    //     url: URL,
-    //     authToken: TOKEN,
-    // });
+    const client = createClient({  
+        url: URL,
+        authToken: TOKEN,
+    });
 //     try {
 //         const result = await client.execute("SELECT * FROM expense");
 //         return result;
@@ -126,7 +126,12 @@ app.get('/monthly', async (req, res) => {
 
 app.get('/month', async (req, res) => {
     try{
-        const response = await pool.query(`SELECT EXTRACT(YEAR FROM date) AS year, EXTRACT(MONTH FROM date) AS month, type, SUM(price) AS total_price FROM expenses GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date), type order by EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date);`);
+        // const response = await pool.query(`SELECT EXTRACT(YEAR FROM date) AS year, EXTRACT(MONTH FROM date) AS month, type, SUM(price) AS total_price FROM expenses GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date), type order by EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date);`);
+        const response = await pool.query(`SELECT to_char(date, 'Month YYYY') AS formatted_date, to_char(date, 'YYYYMM') AS yearmonth, SUM(price) from expenses group by formatted_date, yearmonth order by yearmonth;`);
+        const formattedData = response.rows.map(row => {
+            row.sum = parseFloat(row.sum);
+            return row;
+        });
         res.status(200).send(response.rows);
     }
     catch(error){
