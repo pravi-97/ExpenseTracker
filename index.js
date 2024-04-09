@@ -87,7 +87,9 @@ app.get('/group', async (req, res) => {
     });
     try {
         // const response1 = await pool.query("SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses where deleted = false group by type");
-        const response1 = await client.execute(`SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number GROUP BY formatted_date, yearmonth ORDER BY yearmonth;`);
+
+        const response1 = await client.execute("SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses where deleted = false group by type");
+        // const response1 = await client.execute(`SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number GROUP BY formatted_date, yearmonth ORDER BY yearmonth;`);
         // console.log(result.rows);
         // const formattedData = response1.rows.map(row => {
         //     row.total_price = parseFloat(row.total_price); 
@@ -95,7 +97,7 @@ app.get('/group', async (req, res) => {
         // });
         let response = {};
         // const response2 = await pool.query(`SELECT distinct to_char(date, 'Month') as MMMM, EXTRACT(MONTH FROM date) as MM, EXTRACT(YEAR FROM date) AS year FROM expenses where deleted = false;`);
-        const response2 = await client.execute(`SELECT distinct (CASE WHEN strftime('%m', date) = '01' THEN 'January' WHEN strftime('%m', date) = '02' THEN 'February' WHEN strftime('%m', date) = '03' THEN 'March' WHEN strftime('%m', date) = '04' THEN 'April' WHEN strftime('%m', date) = '05' THEN 'May' WHEN strftime('%m', date) = '06' THEN 'June' WHEN strftime('%m', date) = '07' THEN 'July' WHEN strftime('%m', date) = '08' THEN 'August' WHEN strftime('%m', date) = '09' THEN 'September' WHEN strftime('%m', date) = '10' THEN 'October' WHEN strftime('%m', date) = '11' THEN 'November' WHEN strftime('%m', date) = '12' THEN 'December' ELSE strftime('%m', date) END) AS MMMM, strftime('%m', date) AS MM, strftime('%Y', date) AS year FROM expenses WHERE deleted = 0;`);
+        const response2 = await client.execute(`SELECT distinct (CASE WHEN strftime('%m', date) = '01' THEN 'January' WHEN strftime('%m', date) = '02' THEN 'February' WHEN strftime('%m', date) = '03' THEN 'March' WHEN strftime('%m', date) = '04' THEN 'April' WHEN strftime('%m', date) = '05' THEN 'May' WHEN strftime('%m', date) = '06' THEN 'June' WHEN strftime('%m', date) = '07' THEN 'July' WHEN strftime('%m', date) = '08' THEN 'August' WHEN strftime('%m', date) = '09' THEN 'September' WHEN strftime('%m', date) = '10' THEN 'October' WHEN strftime('%m', date) = '11' THEN 'November' WHEN strftime('%m', date) = '12' THEN 'December' ELSE strftime('%m', date) END) AS mmmm, strftime('%m', date) AS mm, strftime('%Y', date) AS year FROM expenses WHERE deleted = 0;`);
 
         response.sum = response1.rows;
         response.date = response2.rows;
@@ -153,7 +155,7 @@ app.get('/month', async (req, res) => {
             authToken: TOKEN,
         });
         // const response = await pool.query(`SELECT EXTRACT(YEAR FROM date) AS year, EXTRACT(MONTH FROM date) AS formatted_date, SUM(price) AS PRICE FROM expenses where deleted = false GROUP BY EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date) order by EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date);`);
-        const response = await client.execute(`SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS PRICE FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 GROUP BY formatted_date, yearmonth ORDER BY yearmonth;`);
+        const response = await client.execute(`SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 GROUP BY formatted_date, yearmonth ORDER BY yearmonth;`);
         // const formattedData = response.rows.map(row => {
         //     row.price = parseFloat(row.price);
         //     return row;
@@ -178,7 +180,7 @@ app.post('/', async (req, res) =>{
         await client.close();
         // console.log("req.body: ", req.body.body);
         // const result = await pool.query(`INSERT INTO expenses (date, remarks, type, price, deleted) values ( '${req.body.body.date}', '${req.body.body.remarks}', '${req.body.body.type}', '${req.body.body.price}', false )`);
-        res.send("OK", response);
+        res.send("OK");
     }
     catch(error){
         console.log(error.message);
@@ -220,15 +222,16 @@ app.delete('/:id', async (req, res) => {
             args: [req.params.id],
         });
         // console.log(req.params.id);
-        await client.close();
         // const response = await pool.query(`update expenses set deleted = true WHERE ID = ${req.params.id}`);
         // const response = await client.execute(`update expenses set deleted = true WHERE ID = ${req.params.id}`);
-        res.send("OK: ", response);
+        res.send("OK");
     }
     catch (error) {
         console.log(error);
         // await client.close();
         res.status(500).send('Error');
+    } finally{
+        await client.close();
     }
 })
 app.listen(port, () => {
