@@ -68,6 +68,7 @@ app.get('/tag/:tag', async (req, res) => {
                 query = `SELECT * FROM expenses WHERE type = '${req.params.tag}' AND strftime('%m', date) = '${req.query.monthyear.substring(0, 2)}' AND strftime('%Y', date) = '${req.query.monthyear.substring(3, 7)}' AND deleted = 0 ORDER BY id DESC;`;
             }
             // const response = await pool.query(query);
+            console.log("query: ", query);
             const response = await client.execute(query);
             res.status(200).send(response.rows);
         }else{
