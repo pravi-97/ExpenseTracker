@@ -62,6 +62,7 @@ app.get('/tag/:tag', async (req, res) => {
             }else {
                 console.log(req.query.monthyear.substring(0, 2));
                 console.log(req.query.monthyear.substring(3, 7));
+                console.log(req.params.tag);
                 // query = `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' and 
                 // EXTRACT(MONTH FROM date) = ${req.query.monthyear.substring(0, 1)} AND EXTRACT(YEAR FROM date) = ${req.query.monthyear.substring(2, 6) } AND deleted = false order by id DESC`;
                 query = `SELECT * FROM expenses WHERE type = '${req.params.tag}' AND strftime('%m', date) = '${req.query.monthyear.substring(0, 2)}' AND strftime('%Y', date) = '${req.query.monthyear.substring(3, 7)}' AND deleted = 0 ORDER BY id DESC;`;
