@@ -29,11 +29,11 @@ const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MTIw
 // }
 
 app.get('/all', async (req, res) => {
+    const client = createClient({
+        url: URL,
+        authToken: TOKEN,
+    });
     try {
-        // const client = createClient({
-        //     url: URL,
-        //     authToken: TOKEN,
-        // });
         // `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses;`
         // const response = await pool.query("SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where deleted = false order by id DESC");
         const response = await client.execute("SELECT * FROM expenses WHERE deleted = 0 ORDER BY id DESC;");
@@ -43,6 +43,8 @@ app.get('/all', async (req, res) => {
     } catch (error) {
         console.error('Error :', error);
         res.status(500).send('Error fetching data');  
+    } finally{
+        await client.close();
     }
 })
 app.get('/tag/:tag', async (req, res) => {
