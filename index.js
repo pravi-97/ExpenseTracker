@@ -58,7 +58,7 @@ app.get('/tag/:tag', async (req, res) => {
         if (req.params.tag.trim() != ""){
             let query = "";
             if (req.query.monthyear == undefined){
-                query = `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' AND deleted = false order by id DESC`;
+                query = `SELECT * FROM expenses where type = '${req.params.tag}' AND deleted = false order by id DESC`;
             }else {
                 // query = `SELECT to_char(date, 'YYYY-MM-DD') AS formatted_date, * FROM expenses where type = '${req.params.tag}' and 
                 // EXTRACT(MONTH FROM date) = ${req.query.monthyear.substring(0, 1)} AND EXTRACT(YEAR FROM date) = ${req.query.monthyear.substring(2, 6) } AND deleted = false order by id DESC`;
