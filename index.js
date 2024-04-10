@@ -124,12 +124,12 @@ app.get('/monthly', async (req, res) => {
         }else{
             const month = req.query.month.padStart(2, '0'); 
             const year = req.query.year;
-            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year}  AND deleted = false group by type`);
-            // const response = await client.execute(`SELECT type, SUM(price) AS total_price FROM expenses WHERE strftime('%m', date) = '${month}' AND strftime('%Y', date) = '${year}' AND deleted = 0 GROUP BY type;`);
-            const formattedData = response.rows.map(row => {
-                row.total_price = parseFloat(row.total_price);
-                return row;
-            });
+            // const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year}  AND deleted = false group by type`);
+            const response = await client.execute(`SELECT type, SUM(price) AS total_price FROM expenses WHERE strftime('%m', date) = '${month}' AND strftime('%Y', date) = '${year}' AND deleted = 0 GROUP BY type;`);
+            // const formattedData = response.rows.map(row => {
+            //     row.total_price = parseFloat(row.total_price);
+            //     return row;
+            // });
             res.status(200).send(response.rows);
         }
     }
