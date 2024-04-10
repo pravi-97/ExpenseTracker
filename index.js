@@ -55,7 +55,7 @@ app.get('/tag/:tag', async (req, res) => {
 })
 
 app.get('/group', async (req, res) => {
-    console.log("ALL group");
+    console.log("GET group");
         const client = createClient({
         url: URL,
         authToken: TOKEN,
