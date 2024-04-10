@@ -38,7 +38,7 @@ app.get('/tag/:tag', async (req, res) => {
             if (req.query.monthyear == undefined){
                 query = `SELECT * FROM expenses where type = '${req.params.tag}' AND deleted = false order by id DESC`;
             }else {
-                console.log(req.params.tag);query = `SELECT * FROM expenses WHERE type = '${req.params.tag}' AND strftime('%m', date) = '${req.query.monthyear.substring(0, 2)}' AND strftime('%Y', date) = '${req.query.monthyear.substring(3, 7)}' AND deleted = 0 ORDER BY id DESC;`;
+                query = `SELECT * FROM expenses WHERE type = '${req.params.tag}' AND strftime('%m', date) = '${req.query.monthyear.substring(0, 2)}' AND strftime('%Y', date) = '${req.query.monthyear.substring(3, 7)}' AND deleted = 0 ORDER BY id DESC;`;
             }
             const response = await client.execute(query);
             res.status(200).send(response.rows);
@@ -85,8 +85,6 @@ app.get('/monthly', async (req, res) => {
     try {
         const month = req.query.month;
         const year = req.query.year;
-        console.log("month: ", month);
-        console.log("year: ", year);
         if (req.query.month.trim() == "" || req.query.month == undefined || req.query.year.trim() == "" || req.query.year == undefined){
             const response = await client.execute(`SELECT type, SUM(price) AS total_price FROM expenses WHERE deleted = 0 GROUP BY type;`);
             res.status(200).send(response.rows);
@@ -124,7 +122,6 @@ app.post('/', async (req, res) =>{
             url: URL,
             authToken: TOKEN,
         });
-        console.log(req.body);
         const response = await client.execute({
             sql: "INSERT INTO expenses (date, remarks, type, price, deleted) values ( ? , ? , ? , ? , ? )",
             args: [req.body.date, req.body.remarks, req.body.type, req.body.price, false],
