@@ -15,20 +15,8 @@ const pool = new Pool({
 const URL = "libsql://expense-tracker-pravi-97.turso.io";
 const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MTIwNDQ3NzUsImlkIjoiZTI3MGExMzItODEzYS00Y2M2LWE3YzEtNjhjY2YxYzk1MTk4In0.3P_jsYqmmnkL22aSXEK6wL1XmPMd6QW2HFEv9Q2JztpD9x6Cm6GHszI37PpCrQ19v4qNdyIQjgkC6iZl3Nt9DA";
 
-// async function fetchData() {
-    // const client = createClient({  
-    //     url: URL,
-    //     authToken: TOKEN,
-    // });
-//     try {
-//         const result = await client.execute("SELECT * FROM expense");
-//         return result;
-//     } finally {
-//         await client.close();
-//     }
-// }
-
 app.get('/all', async (req, res) => {
+    console.log("GET all");
     const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -48,6 +36,7 @@ app.get('/all', async (req, res) => {
     }
 })
 app.get('/tag/:tag', async (req, res) => {
+    console.log("GET /tag/:tag");
     const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -85,6 +74,7 @@ app.get('/tag/:tag', async (req, res) => {
 })
 
 app.get('/group', async (req, res) => {
+    console.log("ALL group");
         const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -116,6 +106,7 @@ app.get('/group', async (req, res) => {
 })
 
 app.get('/monthly', async (req, res) => {
+    console.log("GET monthly");
         const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -133,8 +124,8 @@ app.get('/monthly', async (req, res) => {
         }else{
             const month = req.query.month.padStart(2, '0'); 
             const year = req.query.year;
-            // const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year}  AND deleted = false group by type`);
-            const response = await client.execute(`SELECT type, SUM(price) AS total_price FROM expenses WHERE strftime('%m', date) = '${month}' AND strftime('%Y', date) = '${year}' AND deleted = 0 GROUP BY type;`);
+            const response = await pool.query(`SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses WHERE EXTRACT(MONTH FROM date) = ${req.query.month} AND EXTRACT(YEAR FROM date) = ${req.query.year}  AND deleted = false group by type`);
+            // const response = await client.execute(`SELECT type, SUM(price) AS total_price FROM expenses WHERE strftime('%m', date) = '${month}' AND strftime('%Y', date) = '${year}' AND deleted = 0 GROUP BY type;`);
             const formattedData = response.rows.map(row => {
                 row.total_price = parseFloat(row.total_price);
                 return row;
@@ -151,6 +142,7 @@ app.get('/monthly', async (req, res) => {
 })
 
 app.get('/month', async (req, res) => {
+    console.log("GET month");
     try{
         const client = createClient({
             url: URL,
@@ -169,6 +161,7 @@ app.get('/month', async (req, res) => {
     }
 })
 app.post('/', async (req, res) =>{
+    console.log("POST /");
     try{
         const client = createClient({
             url: URL,
@@ -191,6 +184,7 @@ app.post('/', async (req, res) =>{
 })
 
 app.put('/', async (req, res) => {
+    console.log("PUT /");
     try {
         const client = createClient({
             url: URL,
@@ -214,6 +208,7 @@ app.put('/', async (req, res) => {
 })
 
 app.delete('/:id', async (req, res) => {
+    console.log("DELETE id");
     try {
         const client = createClient({
             url: URL,
