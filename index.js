@@ -1,3 +1,5 @@
+require('dotenv').config();
+const serverless = require('serverless-http');
 const { createClient } = require("@libsql/client");
 const express = require('express')
 const bodyParser = require('body-parser');
@@ -7,9 +9,8 @@ app.use(cors());
 app.use(express.json());
 const port = 3000
 
-const URL = "libsql://expense-tracker-pravi-97.turso.io";
-const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MTIwNDQ3NzUsImlkIjoiZTI3MGExMzItODEzYS00Y2M2LWE3YzEtNjhjY2YxYzk1MTk4In0.3P_jsYqmmnkL22aSXEK6wL1XmPMd6QW2HFEv9Q2JztpD9x6Cm6GHszI37PpCrQ19v4qNdyIQjgkC6iZl3Nt9DA";
-
+const URL = process.env.URL;
+const TOKEN = process.env.TOKEN;
 app.get('/all', async (req, res) => {
     console.log("GET all");
     const client = createClient({
@@ -176,6 +177,8 @@ app.delete('/:id', async (req, res) => {
         await client.close();
     }
 })
-app.listen(port, () => {
-    console.log(`App listening on port ${port}`)
-})
+// app.listen(port, () => {
+//     console.log(`App listening on port ${port}`)
+// })
+
+module.exports.handler = serverless(app);
