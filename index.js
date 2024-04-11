@@ -1,5 +1,4 @@
 require('dotenv').config();
-const serverless = require('serverless-http');
 const { createClient } = require("@libsql/client");
 const express = require('express')
 const bodyParser = require('body-parser');
@@ -177,8 +176,6 @@ app.delete('/:id', async (req, res) => {
         await client.close();
     }
 })
-// app.listen(port, () => {
-//     console.log(`App listening on port ${port}`)
-// })
-
-module.exports.handler = serverless(app);
+app.listen(port, () => {
+    console.log(`App listening on port ${port}`)
+})
