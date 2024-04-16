@@ -10,6 +10,12 @@ const port = 3000
 
 const URL = process.env.URL;
 const TOKEN = process.env.TOKEN;
+
+app.get('/ping', async (req, res) => {
+    console.log("PING");
+    res.res.status(200).send('Ping Success');
+})
+
 app.get('/all', async (req, res) => {
     console.log("GET all");
     const client = createClient({
