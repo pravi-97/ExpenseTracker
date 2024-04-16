@@ -13,7 +13,7 @@ const TOKEN = process.env.TOKEN;
 
 app.get('/ping', async (req, res) => {
     console.log("PING");
-    res.status(200).send('Ping Success');
+    res.status(200).send({message: 'Ping Success'});
 })
 app.get('/all', async (req, res) => {
     console.log("GET all");
