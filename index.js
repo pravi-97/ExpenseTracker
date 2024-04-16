@@ -1,3 +1,4 @@
+require('dotenv').config(); 
 const { createClient } = require("@libsql/client");
 const express = require('express')
 const bodyParser = require('body-parser');
@@ -7,9 +8,13 @@ app.use(cors());
 app.use(express.json());
 const port = 3000
 
-const URL = "libsql://expense-tracker-pravi-97.turso.io";
-const TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MTIwNDQ3NzUsImlkIjoiZTI3MGExMzItODEzYS00Y2M2LWE3YzEtNjhjY2YxYzk1MTk4In0.3P_jsYqmmnkL22aSXEK6wL1XmPMd6QW2HFEv9Q2JztpD9x6Cm6GHszI37PpCrQ19v4qNdyIQjgkC6iZl3Nt9DA";
+const URL = process.env.URL;
+const TOKEN = process.env.TOKEN;
 
+app.get('/ping', async (req, res) => {
+    console.log("PING");
+    res.res.status(200).send('Ping Success');
+})
 app.get('/all', async (req, res) => {
     console.log("GET all");
     const client = createClient({
@@ -21,8 +26,8 @@ app.get('/all', async (req, res) => {
         res.status(200).send(response.rows);
     } catch (error) {
         console.error('Error :', error);
-        res.status(500).send('Error fetching data');  
-    } finally{
+        res.status(500).send('Error fetching data');
+    } finally {
         await client.close();
     }
 })
@@ -33,30 +38,30 @@ app.get('/tag/:tag', async (req, res) => {
         authToken: TOKEN,
     });
     try {
-        if (req.params.tag.trim() != ""){
+        if (req.params.tag.trim() != "") {
             let query = "";
-            if (req.query.monthyear == undefined){
+            if (req.query.monthyear == undefined) {
                 query = `SELECT * FROM expenses where type = '${req.params.tag}' AND deleted = false order by id DESC`;
-            }else {
+            } else {
                 query = `SELECT * FROM expenses WHERE type = '${req.params.tag}' AND strftime('%m', date) = '${req.query.monthyear.substring(0, 2)}' AND strftime('%Y', date) = '${req.query.monthyear.substring(3, 7)}' AND deleted = 0 ORDER BY id DESC;`;
             }
             const response = await client.execute(query);
             res.status(200).send(response.rows);
-        }else{
+        } else {
             const response = await client.execute(`SELECT * FROM expenses  WHERE deleted = false order by id DESC`);
             res.status(200).send(response.rows);
         }
-     } catch (error) {
+    } catch (error) {
         console.error('Error :', error);
         res.status(500).send('Error fetching data');
-    } finally{
+    } finally {
         await client.close();
     }
 })
 
 app.get('/group', async (req, res) => {
     console.log("GET group");
-        const client = createClient({
+    const client = createClient({
         url: URL,
         authToken: TOKEN,
     });
@@ -68,9 +73,9 @@ app.get('/group', async (req, res) => {
         response.date = response2.rows;
         res.status(200).send(response);
     }
-    catch(e){
+    catch (e) {
         console.log(e);
-        res.status(500).send({"Error: ": e});
+        res.status(500).send({ "Error: ": e });
     } finally {
         await client.close();
     }
@@ -78,17 +83,17 @@ app.get('/group', async (req, res) => {
 
 app.get('/monthly', async (req, res) => {
     console.log("GET monthly");
-        const client = createClient({
+    const client = createClient({
         url: URL,
         authToken: TOKEN,
     });
     try {
         const month = req.query.month;
         const year = req.query.year;
-        if (req.query.month.trim() == "" || req.query.month == undefined || req.query.year.trim() == "" || req.query.year == undefined){
+        if (req.query.month.trim() == "" || req.query.month == undefined || req.query.year.trim() == "" || req.query.year == undefined) {
             const response = await client.execute(`SELECT type, SUM(price) AS total_price FROM expenses WHERE deleted = 0 GROUP BY type;`);
             res.status(200).send(response.rows);
-        }else{
+        } else {
             const response = await client.execute(`SELECT type, SUM(price) AS total_price FROM expenses WHERE strftime('%m', date) = '${month}' AND strftime('%Y', date) = '${year}' AND deleted = 0 GROUP BY type;`);
             res.status(200).send(response.rows);
         }
@@ -103,7 +108,7 @@ app.get('/monthly', async (req, res) => {
 
 app.get('/month', async (req, res) => {
     console.log("GET month");
-    try{
+    try {
         const client = createClient({
             url: URL,
             authToken: TOKEN,
@@ -111,13 +116,13 @@ app.get('/month', async (req, res) => {
         const response = await client.execute(`SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 GROUP BY formatted_date, yearmonth ORDER BY yearmonth;`);
         res.status(200).send(response.rows);
     }
-    catch(error){
+    catch (error) {
         console.log(error.message);
     }
 })
-app.post('/', async (req, res) =>{
+app.post('/', async (req, res) => {
     console.log("POST /");
-    try{
+    try {
         const client = createClient({
             url: URL,
             authToken: TOKEN,
@@ -129,7 +134,7 @@ app.post('/', async (req, res) =>{
         await client.close();
         res.send("OK");
     }
-    catch(error){
+    catch (error) {
         console.log(error.message);
         res.status(500).send('Error');
     }
@@ -151,7 +156,7 @@ app.put('/', async (req, res) => {
     catch (error) {
         console.log(error);
         res.status(500).send('Error');
-    }finally{
+    } finally {
         await client.close();
     }
 })
@@ -172,7 +177,7 @@ app.delete('/:id', async (req, res) => {
     catch (error) {
         console.log(error);
         res.status(500).send('Error');
-    } finally{
+    } finally {
         await client.close();
     }
 })
