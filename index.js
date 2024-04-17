@@ -22,7 +22,7 @@ app.get('/all', async (req, res) => {
         authToken: TOKEN,
     });
     try {
-        const response = await client.execute("SELECT * FROM expenses WHERE deleted = 0 ORDER BY id DESC;");
+        const response = await client.execute("SELECT * FROM expenses WHERE DELETED = 0 ORDER BY DATE DESC;");
         res.status(200).send(response.rows);
     } catch (error) {
         console.error('Error :', error);
