@@ -22,7 +22,7 @@ app.get('/all', async (req, res) => {
         authToken: TOKEN,
     });
     try {
-        const response = await client.execute("SELECT * FROM expenses WHERE DELETED = 0 ORDER BY DATE DESC;");
+        const response = await client.execute("SELECT * FROM expenses WHERE deleted = 0 ORDER BY date DESC;");
         res.status(200).send(response.rows);
     } catch (error) {
         console.error('Error :', error);
@@ -142,6 +142,7 @@ app.post('/', async (req, res) => {
 
 app.put('/', async (req, res) => {
     console.log("PUT /");
+    console.log("AUTH: ", req.body);
     const client = createClient({
         url: URL,
         authToken: TOKEN,
