@@ -130,7 +130,7 @@ app.post('/', async (req, res) => {
         });
         const response = await client.execute({
             sql: "INSERT INTO expenses (date, remarks, type, price, deleted, userid) values ( ? , ? , ? , ? , ? , ? )",
-            args: [req.body.date, req.body.remarks, req.body.type, req.body.price, false, req.query.userid],
+            args: [req.body.date, req.body.remarks, req.body.type, req.body.price, false, req.body.userid],
         });
         await client.close();
         res.send("OK");
