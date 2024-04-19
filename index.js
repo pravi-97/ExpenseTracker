@@ -24,6 +24,7 @@ app.get('/all', async (req, res) => {
     try {
         const response = await client.execute(`SELECT * FROM expenses WHERE deleted = 0 and userid = '${req.body.userid}' ORDER BY date DESC;`);
         console.log("query: ", `SELECT * FROM expenses WHERE deleted = 0 and userid = '${req.body.userid}' ORDER BY date DESC;`);
+        console.log(req.body);
         res.status(200).send(response.rows);
     } catch (error) {
         console.error('Error :', error);
