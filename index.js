@@ -6,7 +6,6 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(bodyParser.json());
 const port = 3000
 
 const URL = process.env.URL;
@@ -18,6 +17,7 @@ app.get('/ping', async (req, res) => {
 })
 app.get('/all', async (req, res) => {
     console.log("GET all");
+    console.log(req);
     const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -25,7 +25,6 @@ app.get('/all', async (req, res) => {
     try {
         const response = await client.execute(`SELECT * FROM expenses WHERE deleted = 0 and userid = '${req.body.userid}' ORDER BY date DESC;`);
         console.log("query: ", `SELECT * FROM expenses WHERE deleted = 0 and userid = '${req.body.userid}' ORDER BY date DESC;`);
-        console.log(req.body);
         res.status(200).send(response.rows);
     } catch (error) {
         console.error('Error :', error);
