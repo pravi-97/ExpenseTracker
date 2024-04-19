@@ -5,7 +5,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
 app.use(cors());
-app.use(express.json());
+// app.use(express.json());
+app.use(bodyParser.json());
 const port = 3000
 
 const URL = process.env.URL;
@@ -119,7 +120,7 @@ app.get('/month', async (req, res) => {
             url: URL,
             authToken: TOKEN,
         });
-        const response = await client.execute(`SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 GROUP BY formatted_date, yearmonth ORDER BY yearmonth;`);
+        const response = await client.execute(`SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 and userid = '${req.body.userid}' GROUP BY formatted_date, yearmonth ORDER BY yearmonth;`);
         res.status(200).send(response.rows);
     }
     catch (error) {
