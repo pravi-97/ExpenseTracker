@@ -192,11 +192,11 @@ app.put('/', async (req, res) => {
 
 app.delete('/:id', async (req, res) => {
     console.log("DELETE id");
+    const client = createClient({
+        url: URL,
+        authToken: TOKEN,
+    });
     try {
-        const client = createClient({
-            url: URL,
-            authToken: TOKEN,
-        });
         const response = await client.execute({
             sql: `update expenses set deleted = true WHERE ID = ?`,
             args: [req.params.id],
