@@ -35,6 +35,7 @@ app.get('/all', async (req, res) => {
 })
 app.get('/tag/:tag', async (req, res) => {
     console.log("GET /tag/:tag");
+    console.log(req.body);
     const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -43,14 +44,14 @@ app.get('/tag/:tag', async (req, res) => {
         if (req.params.tag.trim() != "") {
             let query = "";
             if (req.query.monthyear == undefined) {
-                query = `SELECT * FROM expenses where type = '${req.params.tag}' AND deleted = false order by id DESC`;
+                query = `SELECT * FROM expenses where type = '${req.params.tag}' AND deleted = 0 and userid = '${req.body.userid}' order by id DESC`;
             } else {
-                query = `SELECT * FROM expenses WHERE type = '${req.params.tag}' AND strftime('%m', date) = '${req.query.monthyear.substring(0, 2)}' AND strftime('%Y', date) = '${req.query.monthyear.substring(3, 7)}' AND deleted = 0 ORDER BY id DESC;`;
+                query = `SELECT * FROM expenses WHERE type = '${req.params.tag}' AND strftime('%m', date) = '${req.query.monthyear.substring(0, 2)}' AND strftime('%Y', date) = '${req.query.monthyear.substring(3, 7)}' AND deleted = 0 and userid = '${req.body.userid}' ORDER BY id DESC;`;
             }
             const response = await client.execute(query);
             res.status(200).send(response.rows);
         } else {
-            const response = await client.execute(`SELECT * FROM expenses  WHERE deleted = false order by id DESC`);
+            const response = await client.execute(`SELECT * FROM expenses  WHERE deleted = false and userid = '${req.body.userid}' order by id DESC`);
             res.status(200).send(response.rows);
         }
     } catch (error) {
@@ -63,6 +64,7 @@ app.get('/tag/:tag', async (req, res) => {
 
 app.get('/group', async (req, res) => {
     console.log("GET group");
+    console.log(req.body);
     const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -85,6 +87,7 @@ app.get('/group', async (req, res) => {
 
 app.get('/monthly', async (req, res) => {
     console.log("GET monthly");
+    console.log(req.body);
     const client = createClient({
         url: URL,
         authToken: TOKEN,
@@ -110,6 +113,7 @@ app.get('/monthly', async (req, res) => {
 
 app.get('/month', async (req, res) => {
     console.log("GET month");
+    console.log(req.body);
     try {
         const client = createClient({
             url: URL,
