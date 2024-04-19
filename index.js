@@ -17,6 +17,7 @@ app.get('/ping', async (req, res) => {
 })
 app.get('/all', async (req, res) => {
     console.log("GET all");
+    console.log(`userid = ${req.params.userid}`);
     const client = createClient({
         url: URL,
         authToken: TOKEN,
