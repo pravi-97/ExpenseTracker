@@ -175,6 +175,7 @@ app.put('/', async (req, res) => {
         authToken: TOKEN,
     });
     try {
+        console.log(req.query.field, " ", req.query.value," ", req.query.id);
         const result = await client.execute({
             sql: `UPDATE expenses SET ${req.query.field} = ? WHERE ID = ?`,
             args: [req.query.value, req.query.id],
