@@ -160,7 +160,7 @@ app.post('/', async (req, res) => {
             args: [req.body.date, req.body.remarks, req.body.type, req.body.price, false, req.body.userid],
         });
         await client.close();
-        res.send("OK");
+        res.send({message: "posted"});
     }
     catch (error) {
         console.error(error.message);
@@ -180,7 +180,7 @@ app.put('/', async (req, res) => {
             sql: `UPDATE expenses SET ${req.query.field} = ? WHERE ID = ?`,
             args: [req.query.value, req.query.id],
         });
-        res.send("OK");
+        res.send({message : "updated"});
     }
     catch (error) {
         console.error(error);
@@ -201,7 +201,7 @@ app.delete('/:id', async (req, res) => {
             sql: `update expenses set deleted = true WHERE ID = ?`,
             args: [req.params.id],
         });
-        res.send("OK");
+        res.send({message: "deleted"});
     }
     catch (error) {
         console.error(error);
