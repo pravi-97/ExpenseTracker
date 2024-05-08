@@ -94,7 +94,7 @@ app.get('/group', async (req, res) => {
     }
     catch (error) {
         console.error(error);
-        res.status(500).send({ "Error: ": e });
+        res.status(500).send({ "Error: ": error });
     } finally {
         await client.close();
     }
