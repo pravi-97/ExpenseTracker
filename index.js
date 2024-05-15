@@ -133,11 +133,12 @@ app.get('/monthly', async (req, res) => {
 
 app.get('/month', async (req, res) => {
     console.log("GET month");
+
+    const client = createClient({
+        url: URL,
+        authToken: TOKEN,
+    });
     try {
-        const client = createClient({
-            url: URL,
-            authToken: TOKEN,
-        });
         const response = await client.execute({
             sql: "SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 and userid = ? GROUP BY formatted_date, yearmonth ORDER BY yearmonth",
             args: [req.query.userid]
@@ -146,8 +147,32 @@ app.get('/month', async (req, res) => {
     }
     catch (error) {
         console.error(error);
+    } finally {
+        await client.close();
     }
 })
+
+app.get('/details', async (req, res) => {
+    console.log("GET month");
+    
+    const client = createClient({
+        url: URL,
+        authToken: TOKEN,
+    });
+    try {
+        const response = await client.execute({
+            sql: "SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 and userid = ? GROUP BY formatted_date, yearmonth ORDER BY yearmonth",
+            args: [req.query.userid]
+        });
+        res.status(200).send(response.rows);
+    }
+    catch (error) {
+        console.error(error);
+    } finally {
+        await client.close();
+    }
+})
+
 app.post('/', async (req, res) => {
     console.log("POST /");
     try {
