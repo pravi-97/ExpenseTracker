@@ -42,9 +42,7 @@ app.get('/getall', async (req, res) => {
         authToken: TOKEN,
     });
     try {
-        const response = await client.execute({
-            sql: "SELECT * FROM expenses"
-        });
+        const response = await client.execute("SELECT * FROM expenses");
         res.status(200).send(response.rows);
     } catch (error) {
         console.error('Error :', error);
