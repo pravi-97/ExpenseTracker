@@ -35,6 +35,24 @@ app.get('/all', async (req, res) => {
         await client.close();
     }
 })
+app.get('/getall', async (req, res) => {
+    console.log("GET Backup");
+    const client = createClient({
+        url: URL,
+        authToken: TOKEN,
+    });
+    try {
+        const response = await client.execute({
+            sql: "SELECT * FROM expenses"
+        });
+        res.status(200).send(response.rows);
+    } catch (error) {
+        console.error('Error :', error);
+        res.status(500).send('Error fetching data');
+    } finally {
+        await client.close();
+    }
+})
 app.get('/tag/:tag', async (req, res) => {
     console.log("GET /tag/:tag");
     const client = createClient({
