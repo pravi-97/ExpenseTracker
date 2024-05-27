@@ -24,7 +24,7 @@ app.get('/all', async (req, res) => {
     });
     try {
         const response = await client.execute({
-            sql: "SELECT * FROM expenses WHERE deleted = 0 and userid = ? ORDER BY date DESC;",
+            sql: "SELECT * FROM expenses WHERE deleted = 0 and userid = ? ORDER BY date DESC, ID DESC;",
             args: [req.query.userid],
         });
         res.status(200).send(response.rows);
