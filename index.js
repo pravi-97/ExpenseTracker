@@ -42,8 +42,13 @@ app.get('/getall', async (req, res) => {
         authToken: TOKEN,
     });
     try {
-        const response = await client.execute("SELECT * FROM expenses;");
-        res.status(200).send(response.rows);
+        if(req.query.isauth == process.env.ISAUTH){
+            const response = await client.execute("SELECT * FROM expenses;");
+            res.status(200).send(response.rows);
+        }
+        else {
+            res.status(401).send({ "Error: ": "Unauthorized Request" });
+        }
     } catch (error) {
         console.error('Error :', error);
         res.status(500).send('Error fetching data');
