@@ -23,11 +23,20 @@ app.get('/all', async (req, res) => {
         authToken: TOKEN,
     });
     try {
-        const response = await client.execute({
-            sql: "SELECT * FROM expenses WHERE deleted = 0 and userid = ? ORDER BY date DESC, ID DESC;",
-            args: [req.query.userid],
-        });
-        res.status(200).send(response.rows);
+        if(req.query.fromdate != undefined && req.query.todate != undefined){
+            const response = await client.execute({
+                sql: "SELECT * FROM expenses WHERE deleted = 0 and userid = ? and date >= ? and date <= ? ORDER BY date DESC, ID DESC;",
+                args: [req.query.userid, req.query.fromdate, req.query.todate],
+            });
+            res.status(200).send(response.rows);
+        }else {
+            const response = await client.execute({
+                sql: "SELECT * FROM expenses WHERE deleted = 0 and userid = ? ORDER BY date DESC, ID DESC;",
+                args: [req.query.userid],
+            });
+            res.status(200).send(response.rows);
+        }
+        
     } catch (error) {
         console.error('Error :', error);
         res.status(500).send('Error fetching data');
@@ -101,16 +110,31 @@ app.get('/group', async (req, res) => {
     });
     try {
         let response = {};
-        const response1 = await client.execute({
-            sql: "SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses where deleted = false and userid = ? group by type",
-            args: [req.query.userid]
-        });
-        const response2 = await client.execute({
-            sql: "SELECT distinct (CASE WHEN strftime('%m', date) = '01' THEN 'January' WHEN strftime('%m', date) = '02' THEN 'February' WHEN strftime('%m', date) = '03' THEN 'March' WHEN strftime('%m', date) = '04' THEN 'April' WHEN strftime('%m', date) = '05' THEN 'May' WHEN strftime('%m', date) = '06' THEN 'June' WHEN strftime('%m', date) = '07' THEN 'July' WHEN strftime('%m', date) = '08' THEN 'August' WHEN strftime('%m', date) = '09' THEN 'September' WHEN strftime('%m', date) = '10' THEN 'October' WHEN strftime('%m', date) = '11' THEN 'November' WHEN strftime('%m', date) = '12' THEN 'December' ELSE strftime('%m', date) END) AS mmmm, strftime('%m', date) AS mm, strftime('%Y', date) AS year, strftime('%Y', date)|| '' || strftime('%m', date) as mmyy FROM expenses WHERE deleted = 0 and userid = ? order by MMYY",
-            args: [req.query.userid]
-        });
-        response.sum = response1.rows;
-        response.date = response2.rows;
+        if(req.query.fromdate != undefined && req.query.todate != undefined){
+            const response1 = await client.execute({
+                sql: "SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses where deleted = false and userid = ? and date >= ? and date <= ? group by type",
+                args: [req.query.userid, req.query.fromdate, req.query.todate]
+            });
+            const response2 = await client.execute({
+                sql: "SELECT distinct (CASE WHEN strftime('%m', date) = '01' THEN 'January' WHEN strftime('%m', date) = '02' THEN 'February' WHEN strftime('%m', date) = '03' THEN 'March' WHEN strftime('%m', date) = '04' THEN 'April' WHEN strftime('%m', date) = '05' THEN 'May' WHEN strftime('%m', date) = '06' THEN 'June' WHEN strftime('%m', date) = '07' THEN 'July' WHEN strftime('%m', date) = '08' THEN 'August' WHEN strftime('%m', date) = '09' THEN 'September' WHEN strftime('%m', date) = '10' THEN 'October' WHEN strftime('%m', date) = '11' THEN 'November' WHEN strftime('%m', date) = '12' THEN 'December' ELSE strftime('%m', date) END) AS mmmm, strftime('%m', date) AS mm, strftime('%Y', date) AS year, strftime('%Y', date)|| '' || strftime('%m', date) as mmyy FROM expenses WHERE deleted = 0 and userid = ? and date >= ? and date <= ? order by MMYY",
+                args: [req.query.userid, req.query.fromdate, req.query.todate]
+            });
+            response.sum = response1.rows;
+            response.date = response2.rows;
+        }
+        else{
+            const response1 = await client.execute({
+                sql: "SELECT type, CAST(sum(price) AS numeric) AS total_price FROM expenses where deleted = false and userid = ? group by type",
+                args: [req.query.userid]
+            });
+            const response2 = await client.execute({
+                sql: "SELECT distinct (CASE WHEN strftime('%m', date) = '01' THEN 'January' WHEN strftime('%m', date) = '02' THEN 'February' WHEN strftime('%m', date) = '03' THEN 'March' WHEN strftime('%m', date) = '04' THEN 'April' WHEN strftime('%m', date) = '05' THEN 'May' WHEN strftime('%m', date) = '06' THEN 'June' WHEN strftime('%m', date) = '07' THEN 'July' WHEN strftime('%m', date) = '08' THEN 'August' WHEN strftime('%m', date) = '09' THEN 'September' WHEN strftime('%m', date) = '10' THEN 'October' WHEN strftime('%m', date) = '11' THEN 'November' WHEN strftime('%m', date) = '12' THEN 'December' ELSE strftime('%m', date) END) AS mmmm, strftime('%m', date) AS mm, strftime('%Y', date) AS year, strftime('%Y', date)|| '' || strftime('%m', date) as mmyy FROM expenses WHERE deleted = 0 and userid = ? order by MMYY",
+                args: [req.query.userid]
+            });
+            response.sum = response1.rows;
+            response.date = response2.rows;
+        }
+        
         res.status(200).send(response);
     }
     catch (error) {
@@ -160,11 +184,20 @@ app.get('/month', async (req, res) => {
         authToken: TOKEN,
     });
     try {
-        const response = await client.execute({
-            sql: "SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 and userid = ? GROUP BY formatted_date, yearmonth ORDER BY yearmonth",
-            args: [req.query.userid]
-        });
-        res.status(200).send(response.rows);
+        if(req.query.fromdate != undefined && req.query.todate != undefined){
+            const response = await client.execute({
+                sql: "SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 and userid = ? and date >= ? and date <= ? GROUP BY formatted_date, yearmonth ORDER BY yearmonth",
+                args: [req.query.userid, req.query.fromdate, req.query.todate]
+            });
+            res.status(200).send(response.rows);
+        }
+        else {
+            const response = await client.execute({
+                sql: "SELECT mn.month_name || ' ' || strftime('%Y', date) AS formatted_date, strftime('%Y%m', date) AS yearmonth, SUM(price) AS price FROM expenses INNER JOIN month_names mn ON strftime('%m', date) = mn.month_number WHERE deleted = 0 and userid = ? GROUP BY formatted_date, yearmonth ORDER BY yearmonth",
+                args: [req.query.userid]
+            });
+            res.status(200).send(response.rows);
+        }
     }
     catch (error) {
         console.error(error);
