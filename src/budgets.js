@@ -50,7 +50,6 @@ app.get("/getbudgets", async (req, res) => {
 
 app.post("/addbudget", async (req, res) => {
   console.log("ADD BUDGET");
-  console.log(req.body);
   const client = createClient({
     url: URL,
     authToken: TOKEN,
@@ -99,7 +98,6 @@ app.get("/getbudgetdetails", async (req, res) => {
             "SELECT SUM(PRICE) AS TOTAL_PRICE FROM expenses WHERE strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND DELETED = ? AND USERID = ? " + ctgy,
           args: [false, req.query.userid],
         });
-        console.log("SELECT SUM(PRICE) AS TOTAL_PRICE FROM expenses WHERE strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND DELETED = ? AND USERID = ? " + ctgy);
         const rec = {
             budgetName: budget.budget_name,
             budgetCategory: budget.budget_category,
