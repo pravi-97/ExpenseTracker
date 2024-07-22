@@ -17,9 +17,10 @@ app.get("/getcategory", async (req, res) => {
     authToken: TOKEN,
   });
   try {
-    const response = await client.execute(
-      "SELECT DISTINCT TYPE FROM EXPENSES WHERE DELETED = FALSE"
-    );
+    const response = await client.execute({
+      sql: "SELECT DISTINCT TYPE FROM EXPENSES WHERE DELETED = FALSE AND USERID = ?",
+      args: [req.query.userid],
+    });
     res.status(200).send(response.rows);
   } catch (error) {
     console.error(error);
@@ -95,17 +96,18 @@ app.get("/getbudgetdetails", async (req, res) => {
         }
         const response1 = await client.execute({
           sql:
-            "SELECT SUM(PRICE) AS TOTAL_PRICE FROM expenses WHERE strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND DELETED = ? AND USERID = ? " + ctgy,
+            "SELECT SUM(PRICE) AS TOTAL_PRICE FROM expenses WHERE strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND DELETED = ? AND USERID = ? " +
+            ctgy,
           args: [false, req.query.userid],
         });
         const rec = {
-            budgetName: budget.budget_name,
-            budgetCategory: budget.budget_category,
-            budgetAmount: budget.budget_amount,
-            budgetNote: budget.notes,
-            budgetPeriod: budget.period,
-            actualExpense : response1.rows[0].TOTAL_PRICE,
-        }
+          budgetName: budget.budget_name,
+          budgetCategory: budget.budget_category,
+          budgetAmount: budget.budget_amount,
+          budgetNote: budget.notes,
+          budgetPeriod: budget.period,
+          actualExpense: response1.rows[0].TOTAL_PRICE,
+        };
         response.push(rec);
       } else if (budget.period == "yearly") {
         let ctgy = "";
@@ -114,20 +116,64 @@ app.get("/getbudgetdetails", async (req, res) => {
         }
         const response2 = await client.execute({
           sql:
-            "SELECT SUM(PRICE) AS TOTAL_PRICE FROM expenses WHERE strftime('%Y', date) = strftime('%Y', 'now') AND DELETED = ? AND USERID = ? " + ctgy,
+            "SELECT SUM(PRICE) AS TOTAL_PRICE FROM expenses WHERE strftime('%Y', date) = strftime('%Y', 'now') AND DELETED = ? AND USERID = ? " +
+            ctgy,
           args: [false, req.query.userid],
         });
-        
+
         const rec = {
-            budgetName: budget.budget_name,
-            budgetCategory: budget.budget_category,
-            budgetAmount: budget.budget_amount,
-            budgetNote: budget.notes,
-            budgetPeriod: budget.period,
-            actualExpense : response2.rows[0].TOTAL_PRICE,
-        }
+          budgetName: budget.budget_name,
+          budgetCategory: budget.budget_category,
+          budgetAmount: budget.budget_amount,
+          budgetNote: budget.notes,
+          budgetPeriod: budget.period,
+          actualExpense: response2.rows[0].TOTAL_PRICE,
+        };
         response.push(rec);
       }
+    }
+    res.status(200).send(response);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    await client.close();
+  }
+});
+
+app.get("/getbudgetdetails/list", async (req, res) => {
+  console.log("GET BUDGET DETAILS LIST");
+
+  let response = null;
+  const client = createClient({
+    url: URL,
+    authToken: TOKEN,
+  });
+  try {
+    if (req.query.period == "monthly") {
+      console.log("monthly");
+      let ctgy = "";
+      if (req.query.category != "") {
+        ctgy = `AND TYPE = '${req.query.category}'`;
+      }
+      console.log("ctgy: ", ctgy);
+      response = await client.execute({
+        sql:
+          "SELECT * FROM expenses WHERE strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND DELETED = ? AND USERID = ? " +
+          ctgy,
+        args: [false, req.query.userid],
+      });
+    } else if (req.query.period == "yearly") {
+      console.log("yearly");
+      let ctgy = "";
+      if (req.query.category != "") {
+        ctgy = `AND TYPE = '${req.query.category}'`;
+      }
+      response = await client.execute({
+        sql:
+          "SELECT * FROM expenses WHERE strftime('%Y', date) = strftime('%Y', 'now') AND DELETED = ? AND USERID = ? " +
+          ctgy,
+        args: [false, req.query.userid],
+      });
     }
     res.status(200).send(response);
   } catch (error) {
